@@ -15,4 +15,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <KSPVersionFile Include=".">
+    <Destination>$(RepoRootPath)GameData/DistantObject/DistantObject.version</Destination>
+    <URL>https://github.com/KSPModStewards/DistantObjectEnhancement/releases/latest/download/DistantObject.version</URL>
+    <Download>https://github.com/KSPModStewards/DistantObjectEnhancement/releases/latest</Download>
+    </KSPVersionFile>
+  </ItemGroup>
 </Project>
