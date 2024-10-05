@@ -1,7 +1,7 @@
 {
   "NAME": "DistantObjectEnhancement",
-  "URL": "https://raw.githubusercontent.com/TheDarkBadger/DistantObject/master/GameData/DistantObject/DistantObject.version",
-  "DOWNLOAD": "https://github.com/TheDarkBadger/DistantObject/releases",
+  "URL": "https://github.com/KSPModStewards/DistantObject/releases/latest/download/DistantObject.version",
+  "DOWNLOAD": "https://github.com/KSPModStewards/DistantObject/releases",
   "VERSION": {
     "MAJOR": 2,
     "MINOR": 3,

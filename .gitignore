@@ -3,3 +3,4 @@ bin
 obj
 *.user
 GameData/DistantObject/DistantObject.dll
+GameData/DistantObject/DistantObject.pdb
