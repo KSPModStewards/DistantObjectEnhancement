@@ -43,16 +43,16 @@ namespace DistantObject
 				{
 					brightness = Mathf.Log10(luminosity) * (1.0f - Mathf.Pow(targetDist / 750000.0f, 1.25f));
 
-					flareMesh.transform.position = camPos - targetDist * targetVectorToCam.normalized;
-					flareMesh.transform.LookAt(camPos);
+					flareTransform.position = camPos - targetDist * targetVectorToCam.normalized;
+					flareTransform.LookAt(camPos);
 					float resizeFactor = (0.002f * targetDist * brightness * (0.7f + .99f * camFOV) / 70.0f) * DistantObjectSettings.DistantFlare.flareSize;
 
-					flareMesh.transform.localScale = new Vector3(resizeFactor, resizeFactor, resizeFactor);
+					flareTransform.localScale = new Vector3(resizeFactor, resizeFactor, resizeFactor);
 					//Debug.Log(string.Format("Resizing vessel flare {0} to {1} - brightness {2}, luminosity {3}", referenceShip.vesselName, resizeFactor, brightness, luminosity));
 
 					FlareType flareType = referenceShip.vesselType == VesselType.Debris ? FlareType.Debris : FlareType.Vessel;
 
-					CheckDraw(flareMesh.transform.position, referenceShip.mainBody, FlareDraw.hslWhite, 5.0, flareType);
+					CheckDraw(flareTransform.position, referenceShip.mainBody, FlareDraw.hslWhite, 5.0, flareType);
 				}
 			}
 			catch

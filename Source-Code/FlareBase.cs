@@ -18,6 +18,7 @@ namespace DistantObject
 	{
 		public GameObject flareMesh;
 		public MeshRenderer meshRenderer;
+		protected Transform flareTransform;
 		Material flareMaterial;
 
 		public bool Visible;
@@ -25,6 +26,7 @@ namespace DistantObject
 		protected FlareBase(GameObject flarePrefab, string name, Color color)
 		{
 			flareMesh = GameObject.Instantiate(flarePrefab);
+			flareTransform = flareMesh.transform;
 
 			meshRenderer = flareMesh.GetComponentInChildren<MeshRenderer>();
 
@@ -132,6 +134,8 @@ namespace DistantObject
 				GameObject.Destroy(flareMesh);
 				flareMesh = null;
 			}
+
+			flareTransform = null;
 		}
 	}
 }

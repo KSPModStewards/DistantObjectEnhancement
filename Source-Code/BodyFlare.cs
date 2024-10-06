@@ -21,6 +21,7 @@ namespace DistantObject
 		public static readonly double FlareDistanceRange = MaxFlareDistance - MinFlareDistance;
 
 		public CelestialBody body;
+		Transform bodyTransform;
 		public Renderer scaledRenderer;
 		public Color color;
 		public Vector4 hslColor;
@@ -36,6 +37,7 @@ namespace DistantObject
 			scaledRenderer = body.MapObject.transform.GetComponent<Renderer>();
 
 			this.body = body;
+			bodyTransform = body.transform;
 			color = flareColor;
 			hslColor = Utility.RGB2HSL(flareColor);
 			relativeRadiusSquared = Math.Pow(body.Radius / FlightGlobals.Bodies[1].Radius, 2.0);
@@ -65,11 +67,11 @@ namespace DistantObject
 
 			//position, rotate, and scale mesh
 			targetVectorToCam = ((MinFlareDistance + Math.Min(FlareDistanceRange, distanceFromCamera * bodyFlareDistanceScalar)) * targetVectorToCam.normalized);
-			flareMesh.transform.position = camPos - targetVectorToCam;
-			flareMesh.transform.LookAt(camPos);
+			flareTransform.position = camPos - targetVectorToCam;
+			flareTransform.LookAt(camPos);
 
 			float resizeFactor = (-750.0f * (brightness - 5.0f) * (0.7f + .99f * camFOV) / 70.0f) * DistantObjectSettings.DistantFlare.flareSize;
-			flareMesh.transform.localScale = new Vector3(resizeFactor, resizeFactor, resizeFactor);
+			flareTransform.localScale = new Vector3(resizeFactor, resizeFactor, resizeFactor);
 
 			sizeInDegrees = Math.Acos(Math.Sqrt(distanceFromCamera * distanceFromCamera - bodyRadiusSquared) / distanceFromCamera) * Mathf.Rad2Deg;
 
@@ -78,7 +80,7 @@ namespace DistantObject
 			// Disable the mesh if the scaledRenderer is enabled and visible.
 			flareMesh.SetActive(Visible);
 
-			CheckDraw(body.transform.position, body.referenceBody, hslColor, sizeInDegrees, FlareType.Celestial);
+			CheckDraw(bodyTransform.position, body.referenceBody, hslColor, sizeInDegrees, FlareType.Celestial);
 		}
 
 		public override void Destroy()
@@ -86,6 +88,8 @@ namespace DistantObject
 			base.Destroy();
 
 			scaledRenderer = null;
+			bodyTransform = null;
+			body = null;
 		}
 	}
 }
