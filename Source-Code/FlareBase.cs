@@ -20,6 +20,8 @@ namespace DistantObject
 		public MeshRenderer meshRenderer;
 		Material flareMaterial;
 
+		public bool Visible;
+
 		protected FlareBase(GameObject flarePrefab, string name, Color color)
 		{
 			flareMesh = GameObject.Instantiate(flarePrefab);
@@ -72,23 +74,22 @@ namespace DistantObject
 				inShadow = true;
 			}
 
-			bool isVisible;
 			if (inShadow)
 			{
-				isVisible = false;
+				Visible = false;
 			}
 			else
 			{
-				isVisible = true;
+				Visible = true;
 
 				// See if the sun obscures our target
 				if (FlareDraw.sunDistanceFromCamera < targetDist && FlareDraw.sunSizeInDegrees > targetSize && Vector3d.Angle(FlareDraw.cameraToSunUnitVector, position - FlareDraw.camPos) < FlareDraw.sunSizeInDegrees)
 				{
-					isVisible = false;
+					Visible = false;
 				}
 			}
 
-			if (targetSize < (FlareDraw.camFOV / 500.0f) && isVisible && !MapView.MapIsEnabled)
+			if (targetSize < (FlareDraw.camFOV / 500.0f) && Visible && !MapView.MapIsEnabled)
 			{
 				// Work in HSL space.  That allows us to do dimming of color
 				// by adjusting the lightness value without any hue shifting.
@@ -109,11 +110,12 @@ namespace DistantObject
 				// Uncomment this to help with debugging
 				//alpha = 1.0f;
 				//dimming = 1.0f;
-				meshRenderer.material.color = ResourceUtilities.HSL2RGB(hslColor.x, hslColor.y, hslColor.z * dimming, alpha);
 				flareMaterial.color = ResourceUtilities.HSL2RGB(hslColor.x, hslColor.y, hslColor.z * dimming, alpha);
+				Visible = Visible && alpha > 0;
 			}
 			else
 			{
+				Visible = false;
 				flareMesh.SetActive(false);
 			}
 		}

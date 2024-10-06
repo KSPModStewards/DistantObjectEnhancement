@@ -290,7 +290,7 @@ namespace DistantObject
                         continue;
                     }
 
-                    if (bodyFlare.meshRenderer.material.color.a > 0.0f)
+                    if (bodyFlare.Visible)
                     {
                         Vector3d vectorToBody = bodyFlare.body.position - mouseRay.origin;
                         double mouseBodyAngle = Vector3d.Angle(vectorToBody, mouseRay.direction);
@@ -318,7 +318,7 @@ namespace DistantObject
                     float bestBrightness = 0.01f; // min luminosity to show vessel name
                     foreach (VesselFlare vesselFlare in vesselFlares.Values)
                     {
-                        if (vesselFlare.flareMesh.activeSelf && vesselFlare.meshRenderer.material.color.a > 0.0f)
+                        if (vesselFlare.Visible)
                         {
                             Vector3d vectorToVessel = vesselFlare.referenceShip.transform.position - mouseRay.origin;
                             double mouseVesselAngle = Vector3d.Angle(vectorToVessel, mouseRay.direction);

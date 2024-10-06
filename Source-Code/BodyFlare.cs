@@ -73,8 +73,10 @@ namespace DistantObject
 
 			sizeInDegrees = Math.Acos(Math.Sqrt(distanceFromCamera * distanceFromCamera - bodyRadiusSquared) / distanceFromCamera) * Mathf.Rad2Deg;
 
+			Visible = !(scaledRenderer.enabled && scaledRenderer.isVisible) && DistantObjectSettings.DistantFlare.flaresEnabled && !MapView.MapIsEnabled;
+
 			// Disable the mesh if the scaledRenderer is enabled and visible.
-			flareMesh.SetActive(!(scaledRenderer.enabled && scaledRenderer.isVisible) && DistantObjectSettings.DistantFlare.flaresEnabled && !MapView.MapIsEnabled);
+			flareMesh.SetActive(Visible);
 
 			CheckDraw(body.transform.position, body.referenceBody, hslColor, sizeInDegrees, FlareType.Celestial);
 		}
