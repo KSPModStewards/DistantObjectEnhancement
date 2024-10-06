@@ -26,7 +26,7 @@ namespace DistantObject
 
         private static bool ExternalControl = false;
 
-        private List<Vessel.Situations> situations = new List<Vessel.Situations>();
+        Vessel.Situations situations = (Vessel.Situations)0;
 
         private string showNameString = null;
         private Transform showNameTransform = null;
@@ -149,7 +149,7 @@ namespace DistantObject
             // list
             foreach (var v in vesselFlares)
             {
-                if (v.Key.orbit.referenceBody != FlightGlobals.ActiveVessel.orbit.referenceBody || v.Key.loaded == true || !situations.Contains(v.Key.situation) || v.Value.referenceShip == null)
+                if (v.Key.orbit.referenceBody != FlightGlobals.ActiveVessel.orbit.referenceBody || v.Key.loaded == true || !AllowedSituation(v.Key.situation) || v.Value.referenceShip == null)
                 {
                     deadVessels.Add(v.Key);
                 }
@@ -165,7 +165,7 @@ namespace DistantObject
             for (int i = 0; i < FlightGlobals.Vessels.Count; ++i)
             {
                 Vessel vessel = FlightGlobals.Vessels[i];
-                if (vessel.orbit.referenceBody == FlightGlobals.ActiveVessel.orbit.referenceBody && !vesselFlares.ContainsKey(vessel) && RenderableVesselType(vessel.vesselType) && !vessel.loaded && situations.Contains(vessel.situation))
+                if (vessel.orbit.referenceBody == FlightGlobals.ActiveVessel.orbit.referenceBody && !vesselFlares.ContainsKey(vessel) && RenderableVesselType(vessel.vesselType) && !vessel.loaded && AllowedSituation(vessel.situation))
                 {
                     AddVesselFlare(vessel);
                 }
@@ -180,10 +180,15 @@ namespace DistantObject
             return !(vesselType == VesselType.Flag || vesselType == VesselType.EVA || (vesselType == VesselType.Debris && DistantObjectSettings.DistantFlare.ignoreDebrisFlare));
         }
 
-        //--------------------------------------------------------------------
-        // UpdateVar()
-        // Update atmosphereFactor and dimFactor
-        private void UpdateVar()
+		private bool AllowedSituation(Vessel.Situations situation)
+		{
+			return (situation & situations) != (Vessel.Situations)0;
+		}
+
+		//--------------------------------------------------------------------
+		// UpdateVar()
+		// Update atmosphereFactor and dimFactor
+		private void UpdateVar()
         {
             Vector3d sunBodyAngle = (FlightGlobals.Bodies[0].position - camPos).normalized;
             double sunBodyDist = FlightGlobals.Bodies[0].GetAltitude(camPos) + FlightGlobals.Bodies[0].Radius;
@@ -345,24 +350,13 @@ namespace DistantObject
 			flarePrefab = GameDatabase.Instance.GetModel("DistantObject/Flare/model");
 			GameObject.Destroy(flarePrefab.GetComponent<Collider>());
 
-			Dictionary<string, Vessel.Situations> namedSituations = new Dictionary<string, Vessel.Situations> {
-                { Vessel.Situations.LANDED.ToString(), Vessel.Situations.LANDED},
-                { Vessel.Situations.SPLASHED.ToString(), Vessel.Situations.SPLASHED},
-                { Vessel.Situations.PRELAUNCH.ToString(), Vessel.Situations.PRELAUNCH},
-                { Vessel.Situations.FLYING.ToString(), Vessel.Situations.FLYING},
-                { Vessel.Situations.SUB_ORBITAL.ToString(), Vessel.Situations.SUB_ORBITAL},
-                { Vessel.Situations.ORBITING.ToString(), Vessel.Situations.ORBITING},
-                { Vessel.Situations.ESCAPING.ToString(), Vessel.Situations.ESCAPING},
-                { Vessel.Situations.DOCKED.ToString(), Vessel.Situations.DOCKED},
-            };
-
             string[] situationStrings = DistantObjectSettings.DistantFlare.situations.Split(',');
 
             foreach (string sit in situationStrings)
             {
-                if (namedSituations.ContainsKey(sit))
+                if (Enum.TryParse(sit, out Vessel.Situations situation))
                 {
-                    situations.Add(namedSituations[sit]);
+                    situations |= situation;
                 }
                 else
                 {
