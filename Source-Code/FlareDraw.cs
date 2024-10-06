@@ -1,4 +1,3 @@
-//#define SHOW_FIXEDUPDATE_TIMING
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -42,10 +41,6 @@ namespace DistantObject
         private List<Vessel> deadVessels = new List<Vessel>();
 
         GameObject flarePrefab;
-
-#if SHOW_FIXEDUPDATE_TIMING
-        private Stopwatch stopwatch = new Stopwatch();
-#endif
 
         //--------------------------------------------------------------------
         // AddVesselFlare
@@ -150,10 +145,6 @@ namespace DistantObject
         // Iterate over the vessels, adding and removing flares as appropriate
         private void GenerateVesselFlares()
         {
-#if SHOW_FIXEDUPDATE_TIMING
-                stopwatch.Reset();
-                stopwatch.Start();
-#endif
             // See if there are vessels that need to be removed from our live
             // list
             foreach (var v in vesselFlares)
@@ -163,18 +154,12 @@ namespace DistantObject
                     deadVessels.Add(v.Key);
                 }
             }
-#if SHOW_FIXEDUPDATE_TIMING
-                long scanDead = stopwatch.ElapsedMilliseconds;
-#endif
 
             for (int v = 0; v < deadVessels.Count; ++v)
             {
                 RemoveVesselFlare(deadVessels[v]);
             }
             deadVessels.Clear();
-#if SHOW_FIXEDUPDATE_TIMING
-                long clearDead = stopwatch.ElapsedMilliseconds;
-#endif
 
             // See which vessels we should add
             for (int i = 0; i < FlightGlobals.Vessels.Count; ++i)
@@ -185,13 +170,6 @@ namespace DistantObject
                     AddVesselFlare(vessel);
                 }
             }
-#if SHOW_FIXEDUPDATE_TIMING
-                long addNew = stopwatch.ElapsedMilliseconds;
-                stopwatch.Stop();
-
-                UnityEngine.Debug.Log(string.Format(Constants.DistantObject + " -- GenerateVesselFlares net ms: scanDead = {0}, clearDead = {1}, addNew = {2} - {3} flares tracked",
-                    scanDead, clearDead, addNew, vesselFlares.Count));
-#endif
         }
 
         //--------------------------------------------------------------------
@@ -497,10 +475,6 @@ namespace DistantObject
                 }
                 else
                 {
-#if SHOW_FIXEDUPDATE_TIMING
-                stopwatch.Reset();
-                stopwatch.Start();
-#endif
                     camPos = FlightCamera.fetch.mainCamera.transform.position;
 
                     Vector3d targetVectorToCam = camPos - FlightGlobals.Bodies[0].position;
@@ -523,14 +497,8 @@ namespace DistantObject
                     {
                         flare.Update(camPos, camFOV);
                     }
-#if SHOW_FIXEDUPDATE_TIMING
-                    long bodyCheckdraw = stopwatch.ElapsedMilliseconds;
-#endif
 
                     UpdateVar();
-#if SHOW_FIXEDUPDATE_TIMING
-                    long updateVar = stopwatch.ElapsedMilliseconds;
-#endif
 
                     foreach (VesselFlare vesselFlare in vesselFlares.Values)
                     {
@@ -544,18 +512,8 @@ namespace DistantObject
                             bigHammer = true;
                         }
                     }
-#if SHOW_FIXEDUPDATE_TIMING
-                    long vesselCheckdraw = stopwatch.ElapsedMilliseconds;
-#endif
 
                     UpdateNameShown();
-#if SHOW_FIXEDUPDATE_TIMING
-                    long updateName = stopwatch.ElapsedMilliseconds;
-                    stopwatch.Stop();
-
-                    UnityEngine.Debug.Log(string.Format(Constants.DistantObject + " -- Update net ms: bodyCheckdraw = {0}, updateVar = {1}, vesselCheckdraw = {2}, updateName = {3}",
-                        bodyCheckdraw, updateVar, vesselCheckdraw,updateName));
-#endif
                 }
             }
         }
