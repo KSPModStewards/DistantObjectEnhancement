@@ -10,10 +10,16 @@ namespace DistantObject
 	class VesselFlare : FlareBase
 	{
 		public Vessel referenceShip;
-		public GameObject flareMesh;
-		public MeshRenderer meshRenderer;
 		public float luminosity;
 		public float brightness;
+
+		public VesselFlare(Vessel vessel, GameObject flarePrefab) : base(flarePrefab, vessel.vesselName, Color.white)
+		{
+			referenceShip = vessel;
+
+			luminosity = 5.0f + Mathf.Pow(referenceShip.GetTotalMass(), 1.25f);
+			brightness = 0.0f;
+		}
 
 		public void Update(Vector3d camPos, float camFOV)
 		{
@@ -43,6 +49,10 @@ namespace DistantObject
 
 					flareMesh.transform.localScale = new Vector3(resizeFactor, resizeFactor, resizeFactor);
 					//Debug.Log(string.Format("Resizing vessel flare {0} to {1} - brightness {2}, luminosity {3}", referenceShip.vesselName, resizeFactor, brightness, luminosity));
+
+					FlareType flareType = referenceShip.vesselType == VesselType.Debris ? FlareType.Debris : FlareType.Vessel;
+
+					CheckDraw(flareMesh.transform.position, referenceShip.mainBody, FlareDraw.hslWhite, 5.0, flareType);
 				}
 			}
 			catch
@@ -51,12 +61,6 @@ namespace DistantObject
 				flareMesh.SetActive(false);
 				referenceShip = null;
 			}
-		}
-
-		~VesselFlare()
-		{
-			// Why is this never called?
-			//Debug.Log(Constants.DistantObject + string.Format(" -- VesselFlare {0} Destroy", (referenceShip != null) ? referenceShip.vesselName : "(null vessel?)"));
 		}
 	}
 }

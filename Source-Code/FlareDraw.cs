@@ -7,30 +7,23 @@ using UnityEngine;
 
 namespace DistantObject
 {
-    [KSPAddon(KSPAddon.Startup.Flight, false)]
+	[KSPAddon(KSPAddon.Startup.Flight, false)]
     public class FlareDraw : MonoBehaviour
     {
-        enum FlareType
-        {
-            Celestial,
-            Vessel,
-            Debris
-        }
-
         private List<BodyFlare> bodyFlares = new List<BodyFlare>();
         private Dictionary<Vessel, VesselFlare> vesselFlares = new Dictionary<Vessel, VesselFlare>();
 
-        private static float camFOV;
-        private Vector3d camPos;
-        private float atmosphereFactor = 1.0f;
-        private float dimFactor = 1.0f;
+        internal static float camFOV;
+        internal static Vector3d camPos;
+        internal static float atmosphereFactor = 1.0f;
+        internal static float dimFactor = 1.0f;
 
         // Track the variables relevant to determine whether the sun is
         // occluding a body flare.
-        private double sunDistanceFromCamera = 1.0;
-        private double sunSizeInDegrees = 1.0;
+        internal static double sunDistanceFromCamera = 1.0;
+        internal static double sunSizeInDegrees = 1.0;
         private double sunRadiusSquared;
-        private Vector3d cameraToSunUnitVector = Vector3d.zero;
+        internal static Vector3d cameraToSunUnitVector = Vector3d.zero;
 
         private static bool ExternalControl = false;
 
@@ -39,7 +32,7 @@ namespace DistantObject
         private string showNameString = null;
         private Transform showNameTransform = null;
         private Color showNameColor;
-        static private readonly Vector4 hslWhite = Utility.RGB2HSL(Color.white);
+        static internal readonly Vector4 hslWhite = Utility.RGB2HSL(Color.white);
 
         // If something goes wrong (say, because another mod does something bad
         // that screws up vessels without us seeing the normal "vessel destroyed"
@@ -47,6 +40,8 @@ namespace DistantObject
         // the bigHammer to rebuild our vessel flare table outright.
         private bool bigHammer = false;
         private List<Vessel> deadVessels = new List<Vessel>();
+
+        GameObject flarePrefab;
 
 #if SHOW_FIXEDUPDATE_TIMING
         private Stopwatch stopwatch = new Stopwatch();
@@ -57,34 +52,7 @@ namespace DistantObject
         // Add a new vessel flare to our library
         private void AddVesselFlare(Vessel referenceShip)
         {
-            // DistantObject/Flare/model has extents of (0.5, 0.5, 0.0), a 1/2 meter wide square.
-            GameObject flare = GameDatabase.Instance.GetModel("DistantObject/Flare/model");
-            GameObject flareMesh = Mesh.Instantiate(flare) as GameObject;
-            Destroy(flareMesh.GetComponent<Collider>());
-            flare.DestroyGameObject();
-
-            flareMesh.name = referenceShip.vesselName;
-            flareMesh.SetActive(true);
-
-            MeshRenderer flareMR = flareMesh.GetComponentInChildren<MeshRenderer>();
-            // MOARdV: valerian recommended moving vessel and body flares to
-            // layer 10, but that behaves poorly for nearby / co-orbital objects.
-            // Move vessels back to layer 0 until I can find a better place to
-            // put it.
-            // Renderer layers: http://wiki.kerbalspaceprogram.com/wiki/API:Layers
-            flareMR.gameObject.layer = 15;
-            flareMR.material.shader = Shader.Find("KSP/Alpha/Unlit Transparent");
-            flareMR.material.color = Color.white;
-            flareMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            flareMR.receiveShadows = false;
-
-            VesselFlare vesselFlare = new VesselFlare();
-            vesselFlare.flareMesh = flareMesh;
-            vesselFlare.meshRenderer = flareMR;
-            vesselFlare.referenceShip = referenceShip;
-            vesselFlare.luminosity = 5.0f + Mathf.Pow(referenceShip.GetTotalMass(), 1.25f);
-            vesselFlare.brightness = 0.0f;
-
+            VesselFlare vesselFlare = new VesselFlare(referenceShip, flarePrefab);
             vesselFlares.Add(referenceShip, vesselFlare);
         }
 
@@ -157,8 +125,6 @@ namespace DistantObject
                 }
             }
 
-            GameObject flare = GameDatabase.Instance.GetModel("DistantObject/Flare/model");
-
             double largestSMA = 0.0;
             foreach (CelestialBody body in FlightGlobals.Bodies)
             {
@@ -166,52 +132,17 @@ namespace DistantObject
                 {
                     largestSMA = Math.Max(largestSMA, body.orbit.semiMajorAxis);
 
-                    BodyFlare bf = new BodyFlare();
-
-                    GameObject flareMesh = Mesh.Instantiate(flare) as GameObject;
-                    Destroy(flareMesh.GetComponent<Collider>());
-
-                    flareMesh.name = body.bodyName;
-                    flareMesh.SetActive(true);
-
-                    MeshRenderer flareMR = flareMesh.GetComponentInChildren<MeshRenderer>();
-                    // With KSP 1.0, putting these on layer 10 introduces 
-                    // ghost flares that render for a while before fading away.
-                    // These flares were moved to 10 because of an
-                    // interaction with PlanetShine.  However, I don't see
-                    // that problem any longer (where flares changed brightness
-                    // during sunrise / sunset).  Valerian proposes instead using 15.
-                    flareMR.gameObject.layer = 15;
-                    flareMR.material.shader = Shader.Find("KSP/Alpha/Unlit Transparent");
-                    if (bodyColors.ContainsKey(body))
+                    if (!bodyColors.TryGetValue(body, out Color bodyColor))
                     {
-                        flareMR.material.color = bodyColors[body];
+                        bodyColor = Color.white;
                     }
-                    else
-                    {
-                        flareMR.material.color = Color.white;
-                    }
-                    flareMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    flareMR.receiveShadows = false;
 
-                    Renderer scaledRenderer = body.MapObject.transform.GetComponent<Renderer>();
-
-                    bf.body = body;
-                    bf.bodyMesh = flareMesh;
-                    bf.meshRenderer = flareMR;
-                    bf.scaledRenderer = scaledRenderer;
-                    bf.color = flareMR.material.color;
-                    bf.hslColor = Utility.RGB2HSL(flareMR.material.color);
-                    bf.relativeRadiusSquared = Math.Pow(body.Radius / FlightGlobals.Bodies[1].Radius, 2.0);
-                    bf.bodyRadiusSquared = body.Radius * body.Radius;
-                    bf.bodyMesh.SetActive(DistantObjectSettings.DistantFlare.flaresEnabled);
+                    BodyFlare bf = new BodyFlare(body, flarePrefab, bodyColor);
 
                     bodyFlares.Add(bf);
                 }
             }
             BodyFlare.bodyFlareDistanceScalar = BodyFlare.FlareDistanceRange / largestSMA;
-
-            flare.DestroyGameObject();
         }
 
         //--------------------------------------------------------------------
@@ -261,78 +192,6 @@ namespace DistantObject
                 UnityEngine.Debug.Log(string.Format(Constants.DistantObject + " -- GenerateVesselFlares net ms: scanDead = {0}, clearDead = {1}, addNew = {2} - {3} flares tracked",
                     scanDead, clearDead, addNew, vesselFlares.Count));
 #endif
-        }
-
-        //--------------------------------------------------------------------
-        // CheckDraw
-        // Checks if the given mesh should be drawn.
-        private void CheckDraw(GameObject flareMesh, MeshRenderer flareMR, Vector3d position, CelestialBody referenceBody, Vector4 hslColor, double objRadius, FlareType flareType)
-        {
-            Vector3d targetVectorToSun = FlightGlobals.Bodies[0].position - position;
-            Vector3d targetVectorToRef = referenceBody.position - position;
-            double targetRelAngle = Vector3d.Angle(targetVectorToSun, targetVectorToRef);
-            double targetDist = Vector3d.Distance(position, camPos);
-            double targetSize;
-            if (flareType == FlareType.Celestial)
-            {
-                targetSize = objRadius;
-            }
-            else
-            {
-                targetSize = Math.Atan2(objRadius, targetDist) * Mathf.Rad2Deg;
-            }
-            double targetRefDist = Vector3d.Distance(position, referenceBody.position);
-            double targetRefSize = Math.Acos(Math.Sqrt(Math.Pow(targetRefDist, 2.0) - Math.Pow(referenceBody.Radius, 2.0)) / targetRefDist) * Mathf.Rad2Deg;
-
-            bool inShadow = false;
-            if (referenceBody != FlightGlobals.Bodies[0] && targetRelAngle < targetRefSize)
-            {
-                inShadow = true;
-            }
-
-            bool isVisible;
-            if (inShadow)
-            {
-                isVisible = false;
-            }
-            else
-            {
-                isVisible = true;
-
-                // See if the sun obscures our target
-                if (sunDistanceFromCamera < targetDist && sunSizeInDegrees > targetSize && Vector3d.Angle(cameraToSunUnitVector, position - camPos) < sunSizeInDegrees)
-                {
-                    isVisible = false;
-                }
-            }
-
-            if (targetSize < (camFOV / 500.0f) && isVisible && !MapView.MapIsEnabled)
-            {
-                // Work in HSL space.  That allows us to do dimming of color
-                // by adjusting the lightness value without any hue shifting.
-                // We apply atmospheric dimming using alpha.  Although maybe
-                // I don't need to - it could be done by dimming, too.
-                float alpha = hslColor.w;
-                float dimming = 1.0f;
-                alpha *= atmosphereFactor;
-                dimming *= dimFactor;
-                if (targetSize > (camFOV / 1000.0f))
-                {
-                    dimming *= (float)(((camFOV / targetSize) / 500.0) - 1.0);
-                }
-                if (flareType == FlareType.Debris && DistantObjectSettings.DistantFlare.debrisBrightness < 1.0f)
-                {
-                    dimming *= DistantObjectSettings.DistantFlare.debrisBrightness;
-                }
-                // Uncomment this to help with debugging
-                //alpha = 1.0f;
-                //dimming = 1.0f;
-                flareMR.material.color = ResourceUtilities.HSL2RGB(hslColor.x, hslColor.y, hslColor.z * dimming, alpha);
-            }
-            else
-            {
-                flareMesh.SetActive(false);
-            }
         }
 
         //--------------------------------------------------------------------
@@ -504,7 +363,11 @@ namespace DistantObject
         {
             DistantObjectSettings.LoadConfig();
 
-            Dictionary<string, Vessel.Situations> namedSituations = new Dictionary<string, Vessel.Situations> {
+			// DistantObject/Flare/model has extents of (0.5, 0.5, 0.0), a 1/2 meter wide square.
+			flarePrefab = GameDatabase.Instance.GetModel("DistantObject/Flare/model");
+			GameObject.Destroy(flarePrefab.GetComponent<Collider>());
+
+			Dictionary<string, Vessel.Situations> namedSituations = new Dictionary<string, Vessel.Situations> {
                 { Vessel.Situations.LANDED.ToString(), Vessel.Situations.LANDED},
                 { Vessel.Situations.SPLASHED.ToString(), Vessel.Situations.SPLASHED},
                 { Vessel.Situations.PRELAUNCH.ToString(), Vessel.Situations.PRELAUNCH},
@@ -547,25 +410,6 @@ namespace DistantObject
         }
 
         //--------------------------------------------------------------------
-        // DestroyVesselFlare
-        // Destroy the things associated with a VesselFlare
-        private static void DestroyVesselFlare(VesselFlare v)
-        {
-            if (v.meshRenderer != null)
-            {
-                if (v.meshRenderer.material != null)
-                {
-                    Destroy(v.meshRenderer.material);
-                }
-                Destroy(v.meshRenderer);
-            }
-            if (v.flareMesh != null)
-            {
-                Destroy(v.flareMesh);
-            }
-        }
-
-        //--------------------------------------------------------------------
         // OnDestroy()
         // Clean up after ourselves.
         private void OnDestroy()
@@ -573,27 +417,13 @@ namespace DistantObject
             GameEvents.onVesselWillDestroy.Remove(RemoveVesselFlare);
             foreach (VesselFlare v in vesselFlares.Values)
             {
-                DestroyVesselFlare(v);
+                v.Destroy();
             }
             vesselFlares.Clear();
 
             foreach (BodyFlare b in bodyFlares)
             {
-                if (b.meshRenderer != null)
-                {
-                    if (b.meshRenderer.material != null)
-                    {
-                        Destroy(b.meshRenderer.material);
-                    }
-                    Destroy(b.meshRenderer);
-                    b.meshRenderer = null;
-                }
-                if (b.bodyMesh != null)
-                {
-                    Destroy(b.bodyMesh);
-                    b.bodyMesh = null;
-                }
-                b.scaledRenderer = null;
+                b.Destroy();
             }
             bodyFlares.Clear();
         }
@@ -604,10 +434,9 @@ namespace DistantObject
         // longer supposed to be part of the draw list).
         private void RemoveVesselFlare(Vessel v)
         {
-            if (vesselFlares.ContainsKey(v))
+            if (vesselFlares.TryGetValue(v, out var vesselFlare))
             {
-                DestroyVesselFlare(vesselFlares[v]);
-
+                vesselFlare.Destroy();
                 vesselFlares.Remove(v);
             }
         }
@@ -628,7 +457,7 @@ namespace DistantObject
                 {
                     foreach (VesselFlare v in vesselFlares.Values)
                     {
-                        DestroyVesselFlare(v);
+                        v.Destroy();
                     }
                     vesselFlares.Clear();
                     bigHammer = false;
@@ -643,13 +472,9 @@ namespace DistantObject
                 {
                     foreach (VesselFlare v in vesselFlares.Values)
                     {
-                        DestroyVesselFlare(v);
+                        v.Destroy();
                     }
                     vesselFlares.Clear();
-                }
-                for (int i = 0; i < bodyFlares.Count; ++i)
-                {
-                    bodyFlares[i].bodyMesh.SetActive(false);
                 }
             }
         }
@@ -665,11 +490,6 @@ namespace DistantObject
                 if (MapView.MapIsEnabled)
                 {
                     // Big Hammer for map view - don't draw any flares
-                    foreach (BodyFlare flare in bodyFlares)
-                    {
-                        flare.bodyMesh.SetActive(false);
-                    }
-
                     foreach (VesselFlare vesselFlare in vesselFlares.Values)
                     {
                         vesselFlare.flareMesh.SetActive(false);
@@ -702,11 +522,6 @@ namespace DistantObject
                     foreach (BodyFlare flare in bodyFlares)
                     {
                         flare.Update(camPos, camFOV);
-
-                        if (flare.bodyMesh.activeSelf)
-                        {
-                            CheckDraw(flare.bodyMesh, flare.meshRenderer, flare.body.transform.position, flare.body.referenceBody, flare.hslColor, flare.sizeInDegrees, FlareType.Celestial);
-                        }
                     }
 #if SHOW_FIXEDUPDATE_TIMING
                     long bodyCheckdraw = stopwatch.ElapsedMilliseconds;
@@ -722,11 +537,6 @@ namespace DistantObject
                         try
                         {
                             vesselFlare.Update(camPos, camFOV);
-
-                            if (vesselFlare.flareMesh.activeSelf)
-                            {
-                                CheckDraw(vesselFlare.flareMesh, vesselFlare.meshRenderer, vesselFlare.flareMesh.transform.position, vesselFlare.referenceShip.mainBody, hslWhite, 5.0, (vesselFlare.referenceShip.vesselType == VesselType.Debris) ? FlareType.Debris : FlareType.Vessel);
-                            }
                         }
                         catch
                         {

@@ -21,8 +21,6 @@ namespace DistantObject
 		public static readonly double FlareDistanceRange = MaxFlareDistance - MinFlareDistance;
 
 		public CelestialBody body;
-		public GameObject bodyMesh;
-		public MeshRenderer meshRenderer;
 		public Renderer scaledRenderer;
 		public Color color;
 		public Vector4 hslColor;
@@ -32,6 +30,17 @@ namespace DistantObject
 
 		public double relativeRadiusSquared;
 		public double bodyRadiusSquared;
+
+		public BodyFlare(CelestialBody body, GameObject flarePrefab, Color flareColor) : base(flarePrefab, body.bodyName, flareColor)
+		{
+			scaledRenderer = body.MapObject.transform.GetComponent<Renderer>();
+
+			this.body = body;
+			color = flareColor;
+			hslColor = Utility.RGB2HSL(flareColor);
+			relativeRadiusSquared = Math.Pow(body.Radius / FlightGlobals.Bodies[1].Radius, 2.0);
+			bodyRadiusSquared = body.Radius * body.Radius;
+		}
 
 		public void Update(Vector3d camPos, float camFOV)
 		{
@@ -56,21 +65,25 @@ namespace DistantObject
 
 			//position, rotate, and scale mesh
 			targetVectorToCam = ((MinFlareDistance + Math.Min(FlareDistanceRange, distanceFromCamera * bodyFlareDistanceScalar)) * targetVectorToCam.normalized);
-			bodyMesh.transform.position = camPos - targetVectorToCam;
-			bodyMesh.transform.LookAt(camPos);
+			flareMesh.transform.position = camPos - targetVectorToCam;
+			flareMesh.transform.LookAt(camPos);
 
 			float resizeFactor = (-750.0f * (brightness - 5.0f) * (0.7f + .99f * camFOV) / 70.0f) * DistantObjectSettings.DistantFlare.flareSize;
-			bodyMesh.transform.localScale = new Vector3(resizeFactor, resizeFactor, resizeFactor);
+			flareMesh.transform.localScale = new Vector3(resizeFactor, resizeFactor, resizeFactor);
 
 			sizeInDegrees = Math.Acos(Math.Sqrt(distanceFromCamera * distanceFromCamera - bodyRadiusSquared) / distanceFromCamera) * Mathf.Rad2Deg;
 
 			// Disable the mesh if the scaledRenderer is enabled and visible.
-			bodyMesh.SetActive(!(scaledRenderer.enabled && scaledRenderer.isVisible));
+			flareMesh.SetActive(!(scaledRenderer.enabled && scaledRenderer.isVisible) && DistantObjectSettings.DistantFlare.flaresEnabled && !MapView.MapIsEnabled);
+
+			CheckDraw(body.transform.position, body.referenceBody, hslColor, sizeInDegrees, FlareType.Celestial);
 		}
 
-		~BodyFlare()
+		public override void Destroy()
 		{
-			//Debug.Log(Constants.DistantObject + string.Format(" -- BodyFlare {0} Destroy", (body != null) ? body.name : "(null bodyflare?)"));
+			base.Destroy();
+
+			scaledRenderer = null;
 		}
 	}
 }
