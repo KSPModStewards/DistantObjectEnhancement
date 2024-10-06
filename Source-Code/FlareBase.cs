@@ -18,6 +18,7 @@ namespace DistantObject
 	{
 		public GameObject flareMesh;
 		public MeshRenderer meshRenderer;
+		Material flareMaterial;
 
 		protected FlareBase(GameObject flarePrefab, string name, Color color)
 		{
@@ -42,6 +43,7 @@ namespace DistantObject
 			meshRenderer.material.color = color;
 			meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			meshRenderer.receiveShadows = false;
+			flareMaterial = meshRenderer.material;
 
 			flareMesh.SetActive(DistantObjectSettings.DistantFlare.flaresEnabled);
 		}
@@ -108,6 +110,7 @@ namespace DistantObject
 				//alpha = 1.0f;
 				//dimming = 1.0f;
 				meshRenderer.material.color = ResourceUtilities.HSL2RGB(hslColor.x, hslColor.y, hslColor.z * dimming, alpha);
+				flareMaterial.color = ResourceUtilities.HSL2RGB(hslColor.x, hslColor.y, hslColor.z * dimming, alpha);
 			}
 			else
 			{
@@ -117,17 +120,15 @@ namespace DistantObject
 
 		public virtual void Destroy()
 		{
-			if (meshRenderer != null)
+			if (flareMaterial != null)
 			{
-				if (meshRenderer.material != null)
-				{
-					GameObject.Destroy(meshRenderer.material);
-				}
-				GameObject.Destroy(meshRenderer);
+				GameObject.Destroy(flareMaterial);
+				flareMaterial = null;
 			}
 			if (flareMesh != null)
 			{
 				GameObject.Destroy(flareMesh);
+				flareMesh = null;
 			}
 		}
 	}
