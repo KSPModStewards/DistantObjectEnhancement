@@ -424,18 +424,6 @@ namespace DistantObject
                 {
                     isVisible = false;
                 }
-
-                if (isVisible)
-                {
-                    for (int i = 0; i < bodyFlares.Count; ++i)
-                    {
-                        if (bodyFlares[i].body.bodyName != flareMesh.name && bodyFlares[i].distanceFromCamera < targetDist && bodyFlares[i].sizeInDegrees > targetSize && Vector3d.Angle(bodyFlares[i].cameraToBodyUnitVector, position - camPos) < bodyFlares[i].sizeInDegrees)
-                        {
-                            isVisible = false;
-                            break;
-                        }
-                    }
-                }
             }
 
             if (targetSize < (camFOV / 500.0f) && isVisible && !MapView.MapIsEnabled)
