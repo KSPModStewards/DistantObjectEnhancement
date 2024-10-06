@@ -414,49 +414,38 @@ namespace DistantObject
         }
 
         //--------------------------------------------------------------------
-        // FixedUpdate
-        // Update visible vessel list
-        public void FixedUpdate()
-        {
-            if (DistantObjectSettings.debugMode)
-            {
-                UnityEngine.Debug.Log(Constants.DistantObject + " -- FixedUpdate");
-            }
-
-            if (DistantObjectSettings.DistantFlare.flaresEnabled && !MapView.MapIsEnabled)
-            {
-                if (bigHammer)
-                {
-                    foreach (VesselFlare v in vesselFlares.Values)
-                    {
-                        v.Destroy();
-                    }
-                    vesselFlares.Clear();
-                    bigHammer = false;
-                }
-
-                // MOARdV TODO: Make this callback-based instead of polling
-                GenerateVesselFlares();
-            }
-            else if (!DistantObjectSettings.DistantFlare.flaresEnabled)
-            {
-                if (vesselFlares.Count > 0)
-                {
-                    foreach (VesselFlare v in vesselFlares.Values)
-                    {
-                        v.Destroy();
-                    }
-                    vesselFlares.Clear();
-                }
-            }
-        }
-
-        //--------------------------------------------------------------------
         // Update
         // Update flare positions and visibility
         private void Update()
         {
-            showNameTransform = null;
+			if (DistantObjectSettings.DistantFlare.flaresEnabled && !MapView.MapIsEnabled)
+			{
+				if (bigHammer)
+				{
+					foreach (VesselFlare v in vesselFlares.Values)
+					{
+						v.Destroy();
+					}
+					vesselFlares.Clear();
+					bigHammer = false;
+				}
+
+				// MOARdV TODO: Make this callback-based instead of polling
+				GenerateVesselFlares();
+			}
+			else if (!DistantObjectSettings.DistantFlare.flaresEnabled)
+			{
+				if (vesselFlares.Count > 0)
+				{
+					foreach (VesselFlare v in vesselFlares.Values)
+					{
+						v.Destroy();
+					}
+					vesselFlares.Clear();
+				}
+			}
+
+			showNameTransform = null;
             if (DistantObjectSettings.DistantFlare.flaresEnabled)
             {
                 if (MapView.MapIsEnabled)
