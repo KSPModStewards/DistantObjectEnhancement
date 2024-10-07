@@ -77,9 +77,6 @@ namespace DistantObject
 
 			Visible = !(scaledRenderer.enabled && scaledRenderer.isVisible) && DistantObjectSettings.DistantFlare.flaresEnabled && !MapView.MapIsEnabled;
 
-			// Disable the mesh if the scaledRenderer is enabled and visible.
-			flareMesh.SetActive(Visible);
-
 			CheckDraw(bodyTransform.position, body.referenceBody, hslColor, sizeInDegrees, FlareType.Celestial);
 		}
 

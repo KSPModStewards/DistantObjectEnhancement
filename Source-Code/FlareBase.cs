@@ -118,8 +118,9 @@ namespace DistantObject
 			else
 			{
 				Visible = false;
-				flareMesh.SetActive(false);
 			}
+
+			flareMesh.SetActive(Visible);
 		}
 
 		public virtual void Destroy()

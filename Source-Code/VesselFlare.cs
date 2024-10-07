@@ -27,19 +27,16 @@ namespace DistantObject
 			{
 				Vector3d targetVectorToCam = camPos - referenceShip.transform.position;
 				float targetDist = (float)Vector3d.Distance(referenceShip.transform.position, camPos);
-				bool activeSelf = flareMesh.activeSelf;
-				if (targetDist > 750000.0f && activeSelf)
+				if (targetDist > 750000.0f && Visible)
 				{
-					flareMesh.SetActive(false);
-					activeSelf = false;
+					Visible = false;
 				}
-				else if (targetDist < 750000.0f && !activeSelf)
+				else if (targetDist < 750000.0f && !Visible)
 				{
-					flareMesh.SetActive(true);
-					activeSelf = true;
+					Visible = true;
 				}
 
-				if (activeSelf)
+				if (Visible)
 				{
 					brightness = Mathf.Log10(luminosity) * (1.0f - Mathf.Pow(targetDist / 750000.0f, 1.25f));
 
