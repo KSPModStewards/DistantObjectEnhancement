@@ -1,6 +1,7 @@
 ## Unreleased
 
 - Recompiled for KSP 1.12.5
+- Improved performance
 
 
 ## v1.9.1.1 16 October 2018
