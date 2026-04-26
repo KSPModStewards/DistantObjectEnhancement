@@ -1,4 +1,4 @@
-## Unreleased
+## 3.1 - 2026-04-26
 
 - Recompiled for KSP 1.12.5
 - Improved performance
