@@ -1,0 +1,15 @@
+-stop updating color if it didn't change
+-cache transform and material
+-updatenames
+-vector3d.angle in CheckDraw
+-updatenameshown
+	-localizer
+	-material
+	-transform
+	-vector3.angle
+
+flares around Jool's moons flicker, probably because of the sorting code I removed
+---this actually still seems to be present with that code
+
+with camera zoomed way out, jool is visible through kerbin
+

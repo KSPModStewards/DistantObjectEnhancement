@@ -16,7 +16,7 @@ Original Forum thread:
 http://forum.kerbalspaceprogram.com/index.php?/topic/63457-024-distant-object-enhancement-131-planetssatellites-in-the-night-sky-729/
 
 Source Code:
-https://github.com/MOARdV/DistantObject
+https://github.com/KSPModStewards/DistantObjectEnhancement
 
 Documentation:
 https://github.com/MOARdV/DistantObject/wiki

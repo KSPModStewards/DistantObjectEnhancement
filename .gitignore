@@ -1,8 +1,7 @@
 .vs
-/packages
-.user
-bin/
-obj/
-
-GameData/DistantObject/DistantObject.dll
-GameData/DistantObject/DistantObject.pdb
+bin
+obj
+*.user
+/GameData/DistantObject/DistantObject.dll
+/GameData/DistantObject/DistantObject.pdb
+/GameData/DistantObject/DistantObject.version
