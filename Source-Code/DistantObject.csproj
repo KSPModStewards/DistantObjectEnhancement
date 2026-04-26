@@ -9,7 +9,7 @@
     <Company>Duckytopia / MOARdV / TheDarkBadger</Company>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="KSPBuildTools" Version="0.0.2-alpha.6" />
+    <PackageReference Include="KSPBuildTools" Version="0.0.5" />
     <PackageReference Include="MinVer" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
